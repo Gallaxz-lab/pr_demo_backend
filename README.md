@@ -1,0 +1,93 @@
+# PR.Racing Shop — Business Backend
+
+FastAPI + SQLAlchemy backend for a vertical ERP serving a performance
+motorcycle garage. One shared database (products, compatibility, stock,
+customers, orders) underneath every module, so nothing drifts out of sync
+between channels.
+
+## What's real vs. stubbed
+
+This was built without network/API access, so it splits honestly:
+
+| | Status |
+|---|---|
+| **Phase 1** — catalog, inventory, orders, customers, admin auth, catalog-grounded AI Q&A | **Fully working.** Runs end-to-end with `sqlite` and no external accounts. |
+| **Phase 2** — LINE webhook, workshop job management | **Logic complete, integration stubbed.** The webhook parses LINE's event format and routes to the real Q&A engine; `line_service.py` needs a real LINE Official Account's channel secret/token to actually send messages (falls back to printing replies to the console until then). |
+| **Phase 3** — settlement reconciliation, invoice OCR, analytics | **Invoice OCR is real** (Claude vision API — works once `ANTHROPIC_API_KEY` is set; accuracy depends on image quality and hasn't been validated against real supplier invoices yet, which is why the review step before posting still matters). **Settlement reconciliation logic is real but matches against a placeholder reference format** — actual Shopee/Lazada exports need seller-center access to see their real format.
+
+Every stub is marked with a docstring explaining exactly what's missing and
+why — search for `STUB` or `Phase 2`/`Phase 3` comments.
+
+## Setup
+
+```bash
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env          # fill in ANTHROPIC_API_KEY etc. as you get them
+python seed_data.py           # loads demo catalog (matches the pitch dashboard)
+python create_admin.py owner yourpassword owner
+uvicorn app.main:app --reload
+```
+
+Open `http://localhost:8000/docs` for interactive Swagger docs — every
+endpoint below is callable from there directly.
+
+To switch from the SQLite demo DB to Postgres, just change `DATABASE_URL`
+in `.env` — the models don't change.
+
+## Admin UI
+
+`frontend/admin.html` is a plain HTML/JS admin console wired to the real
+API above — not mock data. Run the backend, then just open the file in a
+browser (or `cd frontend && python -m http.server 8080`):
+
+- Dashboard — live KPIs from `/analytics/*`
+- Catalog, Inventory, Orders (with a working "Verify" button that calls
+  `/orders/{id}/verify-payment`), AI Q&A tester, Workshop job board,
+  Finance (settlement import + invoice OCR), Analytics
+
+It's a plain file, not a hosted page, because it needs to reach your
+backend on `localhost` — a hosted page can't. The API base URL is
+editable in the top bar if you run the backend somewhere other than
+`http://localhost:8000`.
+
+## Demo pages
+
+`demo/` holds two standalone, no-backend-required HTML pages used for
+presenting the Finance module to non-technical stakeholders — a sample-data
+walkthrough of reconciliation and OCR, in English and Thai. Open them
+directly in a browser; they're self-contained.
+
+## Endpoint map by phase
+
+**Phase 1**
+- `POST /auth/login` — admin JWT login
+- `GET/POST /catalog/products`, `GET /catalog/compatibility`
+- `GET /inventory/stock`, `POST /inventory/movements`
+- `GET/POST /customers/`, `GET /customers/{id}/history`
+- `GET/POST /orders/`, `POST /orders/{id}/verify-payment`
+- `POST /ai/qa` — catalog-grounded Q&A (try it with no `ANTHROPIC_API_KEY` set — it still answers from the catalog)
+
+**Phase 2**
+- `POST /messaging/line/webhook` — LINE event receiver
+- `GET/POST /workshop/jobs`, `.../approve`, `.../assign`, `.../complete`
+
+**Phase 3**
+- `POST /finance/settlements/import`
+- `POST /finance/invoices/ocr`
+- `GET /analytics/low-stock-forecast`, `GET /analytics/sales-summary`
+
+## Why one shared database
+
+Every router reads/writes the same `Product`, `StockLevel`, `Customer`, and
+`Order` tables. A LINE-driven sale (Phase 2) deducts the same stock row an
+admin-verified order (Phase 1) would, and a settlement import (Phase 3)
+reconciles against the same `Order.total_amount` the storefront created —
+so there's no separate "channel database" to fall out of sync.
+
+## Next real steps, in order
+
+1. Get a LINE Official Account + webhook URL → drop credentials into `.env`, `line_service.py` goes live with zero code changes.
+2. Add `ANTHROPIC_API_KEY` → AI Q&A moves from the deterministic fallback to actual conversational replies, still catalog-grounded.
+3. Once you have Shopee/Lazada seller-center access, replace the placeholder matcher in `reconciliation_service.py` with each platform's actual settlement reference format.
+4. Pick an OCR provider (Claude's vision API works well here) and fill in `ocr_service.py`.

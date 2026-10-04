@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR.Racing Shop — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asphalt:#17181a; --panel:#212327; --panel-2:#292b30; --line:#3a3d43;
+  --text:#e6e8ea; --muted:#9aa0a8; --amber:#f2a93b; --red:#e8432f; --green:#4cc584;
+  --font-head:'Space Grotesk',system-ui,sans-serif; --font-body:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--asphalt);color:var(--text);font-family:var(--font-body);}
+header{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+h1{font-family:var(--font-head);font-size:19px;margin:0;font-weight:700;}
+h1 span{color:var(--amber);}
+.apibar{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);margin-left:auto;flex-wrap:wrap;}
+.apibar input{background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:6px 9px;border-radius:4px;font-size:12.5px;font-family:var(--font-body);width:180px;}
+.apibar button{background:var(--panel-2);border:1px solid var(--line);color:var(--amber);padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12.5px;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;}
+.status-dot.up{background:var(--green);}
+.status-dot.down{background:var(--red);}
+nav{display:flex;gap:4px;padding:10px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+nav button{background:none;border:1px solid transparent;color:var(--muted);padding:7px 13px;border-radius:5px;cursor:pointer;font-family:var(--font-head);font-size:12.5px;font-weight:600;}
+nav button.active{background:var(--panel);color:var(--amber);border-color:var(--line);}
+main{max-width:1100px;margin:0 auto;padding:20px;}
+.view{display:none;}
+.view.active{display:block;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px;}
+.card h2{font-family:var(--font-head);font-size:14.5px;margin:0;padding:12px 15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+.card h2 small{color:var(--muted);font-family:var(--font-body);font-weight:400;font-size:11.5px;}
+.card .body{padding:14px 15px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);}
+th{color:var(--muted);font-weight:500;font-size:11px;}
+tr:last-child td{border-bottom:none;}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
+.kpi .n{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--amber);}
+.kpi .l{color:var(--muted);font-size:11.5px;margin-top:2px;}
+label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;}
+input,select,textarea{background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:8px 10px;border-radius:4px;font-size:13px;font-family:var(--font-body);width:100%;}
+textarea{resize:vertical;min-height:60px;}
+.row{display:grid;gap:10px;margin-bottom:10px;}
+.row.g2{grid-template-columns:1fr 1fr;}
+.row.g3{grid-template-columns:1fr 1fr 1fr;}
+button.act{background:var(--amber);color:#1a1200;border:none;padding:8px 14px;border-radius:4px;font-family:var(--font-head);font-weight:700;font-size:12.5px;cursor:pointer;}
+button.act:hover{background:#ffbd5c;}
+button.sm{background:var(--panel-2);border:1px solid var(--line);color:var(--amber);font-size:11px;padding:4px 9px;border-radius:4px;cursor:pointer;}
+.pill{font-size:11px;padding:2px 8px;border-radius:10px;}
+.pill.pending,.pill.quoted{background:rgba(232,67,47,.15);color:var(--red);}
+.pill.verified,.pill.done,.pill.approved{background:rgba(76,197,132,.15);color:var(--green);}
+.pill.packing,.pill.in_progress{background:rgba(242,169,59,.15);color:var(--amber);}
+.msg{font-size:12px;padding:8px 10px;border-radius:4px;margin-top:8px;}
+.msg.ok{background:rgba(76,197,132,.12);color:var(--green);}
+.msg.err{background:rgba(232,67,47,.12);color:var(--red);}
+.answer{background:var(--panel-2);border-left:2px solid var(--amber);padding:10px 12px;border-radius:0 4px 4px 0;font-size:13px;margin-top:10px;}
+.answer small{display:block;color:var(--muted);margin-top:6px;font-family:var(--font-head);font-size:11px;}
+.note{color:var(--muted);font-size:11.5px;padding:0 15px 12px;}
+@media(max-width:640px){
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  .row.g2,.row.g3{grid-template-columns:1fr;}
+  header{flex-direction:column;align-items:flex-start;}
+  .apibar{margin-left:0;width:100%;}
+  .apibar input{width:100%;flex:1;}
+  table{font-size:11.5px;}
+  th,td{padding:6px 8px;}
+  nav{gap:6px;}
+  nav button{padding:6px 10px;font-size:11.5px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>PR.<span>Racing</span> Admin</h1>
+  <div class="apibar">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">checking...</span>
+    <label style="margin:0;">API:</label>
+    <input id="apiBase" value="http://localhost:8000">
+    <input id="user" placeholder="username" style="width:100px;">
+    <input id="pass" placeholder="password" type="password" style="width:100px;">
+    <button onclick="login()">Login</button>
+    <button onclick="checkHealth()">Reconnect</button>
+  </div>
+</header>
+
+<nav id="tabs"></nav>
+
+<main>
+  <div class="view active" id="view-dashboard">
+    <div class="kpis" id="kpis"></div>
+    <div class="card"><h2>Low stock <small>from /analytics/low-stock-forecast</small></h2>
+      <div class="body"><table id="tbl-lowstock"><tr><th>Product ID</th><th>Qty</th><th>Threshold</th></tr></table></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-catalog">
+    <div class="card"><h2>Products <small>GET /catalog/products</small><button class="sm" onclick="loadCatalog()">Refresh</button></h2>
+      <div class="body"><table id="tbl-catalog"><tr><th>SKU</th><th>Name</th><th>Price</th><th>Compatible models</th></tr></table></div>
+    </div>
+    <div class="card"><h2>Compatibility check <small>GET /catalog/compatibility</small></h2>
+      <div class="body">
+        <div class="row g3">
+          <div><label>SKU</label><input id="ck-sku" placeholder="e.g. EX-155-FULL"></div>
+          <div><label>Bike model</label><input id="ck-model" placeholder="e.g. Exciter 155"></div>
+          <div style="align-self:end;"><button class="act" onclick="checkCompat()">Check</button></div>
+        </div>
+        <div id="ck-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-inventory">
+    <div class="card"><h2>Stock levels <small>GET /inventory/stock</small><button class="sm" onclick="loadStock()">Refresh</button></h2>
+      <div class="body"><table id="tbl-stock"><tr><th>Product ID</th><th>Qty</th><th>Reorder at</th></tr></table></div>
+    </div>
+    <div class="card"><h2>Record stock movement <small>POST /inventory/movements</small></h2>
+      <div class="body">
+        <div class="row g3">
+          <div><label>Product ID</label><input id="mv-pid" type="number"></div>
+          <div><label>Change (+in / -out)</label><input id="mv-change" type="number"></div>
+          <div><label>Reason</label><input id="mv-reason"></div>
+        </div>
+        <button class="act" onclick="recordMovement()">Submit</button>
+        <div id="mv-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-orders">
+    <div class="card"><h2>Orders <small>GET /orders/ · verify via POST /orders/{id}/verify-payment</small><button class="sm" onclick="loadOrders()">Refresh</button></h2>
+      <div class="body"><table id="tbl-orders"><tr><th>#</th><th>Customer ID</th><th>Channel</th><th>Status</th><th>Payment</th><th>Amount</th><th></th></tr></table></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-aiqa">
+    <div class="card"><h2>AI product Q&amp;A <small>POST /ai/qa — catalog-grounded</small></h2>
+      <div class="body">
+        <label>Question</label>
+        <textarea id="qa-question" placeholder="e.g. ท่อนี้ใส่กับ Exciter 155 ปี 2023 ได้ไหม"></textarea>
+        <button class="act" style="margin-top:8px;" onclick="askQA()">Ask</button>
+        <div id="qa-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-workshop">
+    <div class="card"><h2>Repair jobs <small>GET /workshop/jobs</small><button class="sm" onclick="loadJobs()">Refresh</button></h2>
+      <div class="body"><table id="tbl-jobs"><tr><th>#</th><th>Bike</th><th>Description</th><th>Mechanic</th><th>Status</th><th>Amount</th><th></th></tr></table></div>
+    </div>
+    <div class="card"><h2>New job <small>POST /workshop/jobs</small></h2>
+      <div class="body">
+        <div class="row g2">
+          <div><label>Customer ID</label><input id="job-cid" type="number"></div>
+          <div><label>Quoted amount (฿)</label><input id="job-amt" type="number"></div>
+        </div>
+        <div class="row g2">
+          <div><label>Bike</label><input id="job-bike" placeholder="e.g. Honda Wave 125i"></div>
+          <div><label>Description</label><input id="job-desc" placeholder="e.g. Clutch replacement"></div>
+        </div>
+        <button class="act" onclick="createJob()">Create job</button>
+        <div id="job-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-finance">
+    <div class="card"><h2>Import settlement <small>POST /finance/settlements/import</small></h2>
+      <div class="body">
+        <div class="row g3">
+          <div><label>Channel</label><input id="st-channel" placeholder="shopee / lazada"></div>
+          <div><label>Reference</label><input id="st-ref" placeholder="settlement ref (contains order id)"></div>
+          <div><label>Gross amount</label><input id="st-gross" type="number"></div>
+        </div>
+        <div class="row g2">
+          <div><label>Fees</label><input id="st-fees" type="number"></div>
+          <div style="align-self:end;"><button class="act" onclick="importSettlement()">Import</button></div>
+        </div>
+        <div id="st-result"></div>
+      </div>
+    </div>
+    <div class="card"><h2>Invoice OCR <small>POST /finance/invoices/ocr — OCR not yet connected, see README</small></h2>
+      <div class="body">
+        <label>Image (base64)</label>
+        <textarea id="ocr-b64" placeholder="paste base64-encoded invoice image"></textarea>
+        <button class="act" style="margin-top:8px;" onclick="ocrInvoice()">Submit</button>
+        <div id="ocr-result"></div>
+      </div>
+    </div>
+    <div class="card" id="card-imports" style="display:none;"><h2>This session's imports</h2>
+      <div class="body"><table id="tbl-imports"><tr><th>Channel</th><th>Reference</th><th>Net</th><th>Matched order</th></tr></table></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-analytics">
+    <div class="card"><h2>Sales summary <small>GET /analytics/sales-summary</small><button class="sm" onclick="loadSalesSummary()">Refresh</button></h2>
+      <div class="body" id="sales-summary">—</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const TABS = [
+  ["dashboard","Dashboard"],["catalog","Catalog"],["inventory","Inventory"],
+  ["orders","Orders"],["aiqa","AI Q&A"],["workshop","Workshop"],
+  ["finance","Finance"],["analytics","Analytics"]
+];
+const tabsEl = document.getElementById('tabs');
+TABS.forEach(([id,label],i)=>{
+  const b = document.createElement('button');
+  b.textContent = label; b.onclick = () => showView(id);
+  if(i===0) b.classList.add('active');
+  b.dataset.tab = id;
+  tabsEl.appendChild(b);
+});
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+  const loaders = {dashboard:loadDashboard, catalog:loadCatalog, inventory:loadStock, orders:loadOrders, workshop:loadJobs, analytics:loadSalesSummary};
+  if(loaders[id]) loaders[id]();
+}
+
+let authToken = localStorage.getItem('pr_admin_token') || null;
+(function initApiBase(){
+  const saved = localStorage.getItem('pr_admin_api_base');
+  if(saved){ document.getElementById('apiBase').value = saved; return; }
+  // Served by the backend itself at /ui -> same origin already has the API.
+  if(location.protocol !== 'file:'){ document.getElementById('apiBase').value = location.origin; }
+})();
+document.getElementById('apiBase').addEventListener('change', e => localStorage.setItem('pr_admin_api_base', e.target.value));
+function apiBase(){ return document.getElementById('apiBase').value.replace(/\/$/,''); }
+
+async function api(path, opts={}){
+  const headers = opts.headers || {};
+  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  if(opts.body && !(opts.body instanceof URLSearchParams)) headers['Content-Type'] = 'application/json';
+  const res = await fetch(apiBase()+path, {...opts, headers});
+  if(!res.ok){ const t = await res.text(); throw new Error(`${res.status}: ${t}`); }
+  return res.json();
+}
+
+async function checkHealth(){
+  const dot = document.getElementById('statusDot'), txt = document.getElementById('statusText');
+  try{ await api('/'); dot.className='status-dot up'; txt.textContent='connected'; loadDashboard(); }
+  catch(e){ dot.className='status-dot down'; txt.textContent='offline'; }
+}
+
+async function login(){
+  const body = new URLSearchParams();
+  body.set('username', document.getElementById('user').value);
+  body.set('password', document.getElementById('pass').value);
+  try{
+    const data = await api('/auth/login', {method:'POST', body});
+    authToken = data.access_token;
+    localStorage.setItem('pr_admin_token', authToken);
+    alert('Logged in.');
+  } catch(e){ alert('Login failed: '+e.message); }
+}
+
+// ---------- Dashboard ----------
+async function loadDashboard(){
+  try{
+    const [lowstock, sales] = await Promise.all([api('/analytics/low-stock-forecast'), api('/analytics/sales-summary')]);
+    const kpis = document.getElementById('kpis');
+    kpis.innerHTML = `
+      <div class="kpi"><div class="n">${lowstock.length}</div><div class="l">Low stock alerts</div></div>
+      <div class="kpi"><div class="n">฿${(sales.total_verified_revenue||0).toLocaleString()}</div><div class="l">Verified revenue</div></div>
+      <div class="kpi"><div class="n">${Object.keys(sales.by_channel||{}).length}</div><div class="l">Active channels</div></div>
+      <div class="kpi"><div class="n">—</div><div class="l">Connect more KPIs as needed</div></div>`;
+    const t = document.getElementById('tbl-lowstock');
+    t.innerHTML = '<tr><th>Product ID</th><th>Qty</th><th>Threshold</th></tr>' +
+      lowstock.map(l=>`<tr><td>${l.product_id}</td><td>${l.quantity}</td><td>${l.reorder_threshold}</td></tr>`).join('');
+  } catch(e){}
+}
+
+// ---------- Catalog ----------
+async function loadCatalog(){
+  try{
+    const products = await api('/catalog/products');
+    const t = document.getElementById('tbl-catalog');
+    t.innerHTML = '<tr><th>SKU</th><th>Name</th><th>Price</th><th>Compatible models</th></tr>' +
+      products.map(p=>`<tr><td>${p.sku}</td><td>${p.name}</td><td>฿${p.price}</td><td>${p.compatibility.map(c=>c.bike_model).join(', ')||'—'}</td></tr>`).join('');
+  } catch(e){}
+}
+async function checkCompat(){
+  const sku = document.getElementById('ck-sku').value, model = document.getElementById('ck-model').value;
+  const el = document.getElementById('ck-result');
+  try{
+    const r = await api(`/catalog/compatibility?bike_model=${encodeURIComponent(model)}&sku=${encodeURIComponent(sku)}`);
+    el.innerHTML = `<div class="msg ${r.fits?'ok':'err'}">${r.fits ? 'Fits' : "Doesn't fit"} — ${r.matches.length} matching record(s)</div>`;
+  } catch(e){ el.innerHTML = `<div class="msg err">${e.message}</div>`; }
+}
+
+// ---------- Inventory ----------
+async function loadStock(){
+  try{
+    const levels = await api('/inventory/stock');
+    const t = document.getElementById('tbl-stock');
+    t.innerHTML = '<tr><th>Product ID</th><th>Qty</th><th>Reorder at</th></tr>' +
+      levels.map(l=>`<tr><td>${l.product_id}</td><td>${l.quantity}</td><td>${l.reorder_threshold}</td></tr>`).join('');
+  } catch(e){}
+}
+async function recordMovement(){
+  const el = document.getElementById('mv-result');
+  try{
+    await api('/inventory/movements', {method:'POST', body: JSON.stringify({
+      product_id: Number(document.getElementById('mv-pid').value),
+      change: Number(document.getElementById('mv-change').value),
+      reason: document.getElementById('mv-reason').value
+    })});
+    el.innerHTML = '<div class="msg ok">Recorded.</div>';
+    loadStock();
+  } catch(e){ el.innerHTML = `<div class="msg err">${e.message}</div>`; }
+}
+
+// ---------- Orders ----------
+async function loadOrders(){
+  try{
+    const orders = await api('/orders/');
+    const t = document.getElementById('tbl-orders');
+    t.innerHTML = '<tr><th>#</th><th>Customer ID</th><th>Channel</th><th>Status</th><th>Payment</th><th>Amount</th><th></th></tr>' +
+      orders.map(o=>`<tr><td>#${o.id}</td><td>${o.customer_id}</td><td>${o.channel}</td>
+        <td><span class="pill ${o.status}">${o.status}</span></td>
+        <td><span class="pill ${o.payment_status}">${o.payment_status}</span></td>
+        <td>฿${o.total_amount}</td>
+        <td>${o.payment_status==='pending' ? `<button class="sm" onclick="verifyOrder(${o.id})">Verify</button>` : ''}</td>
+      </tr>`).join('');
+  } catch(e){}
+}
+async function verifyOrder(id){
+  try{ await api(`/orders/${id}/verify-payment`, {method:'POST', body: JSON.stringify({verified:true})}); loadOrders(); }
+  catch(e){ alert(e.message); }
+}
+
+// ---------- AI Q&A ----------
+async function askQA(){
+  const el = document.getElementById('qa-result');
+  try{
+    const r = await api('/ai/qa', {method:'POST', body: JSON.stringify({question: document.getElementById('qa-question').value})});
+    el.innerHTML = `<div class="answer">${r.answer}<small>grounded_sku: ${r.grounded_sku||'none'} · stock: ${r.stock_at_answer_time ?? 'n/a'}</small></div>`;
+  } catch(e){ el.innerHTML = `<div class="msg err">${e.message}</div>`; }
+}
+
+// ---------- Workshop ----------
+async function loadJobs(){
+  try{
+    const jobs = await api('/workshop/jobs');
+    const t = document.getElementById('tbl-jobs');
+    t.innerHTML = '<tr><th>#</th><th>Bike</th><th>Description</th><th>Mechanic</th><th>Status</th><th>Amount</th><th></th></tr>' +
+      jobs.map(j=>`<tr><td>#${j.id}</td><td>${j.bike_description}</td><td>${j.description}</td><td>${j.mechanic||'—'}</td>
+        <td><span class="pill ${j.status}">${j.status}</span></td><td>฿${j.quoted_amount}</td>
+        <td>
+          ${j.status==='quoted' ? `<button class="sm" onclick="approveJob(${j.id})">Approve</button>` : ''}
+          ${j.status==='approved' ? `<button class="sm" onclick="assignJob(${j.id})">Assign me</button>` : ''}
+          ${j.status==='in_progress' ? `<button class="sm" onclick="completeJob(${j.id})">Complete</button>` : ''}
+        </td>
+      </tr>`).join('');
+  } catch(e){}
+}
+async function approveJob(id){ await api(`/workshop/jobs/${id}/approve`, {method:'POST'}); loadJobs(); }
+async function assignJob(id){ await api(`/workshop/jobs/${id}/assign?mechanic=${encodeURIComponent(prompt('Mechanic name:')||'')}`, {method:'POST'}); loadJobs(); }
+async function completeJob(id){ await api(`/workshop/jobs/${id}/complete`, {method:'POST'}); loadJobs(); }
+async function createJob(){
+  const el = document.getElementById('job-result');
+  try{
+    await api('/workshop/jobs', {method:'POST', body: JSON.stringify({
+      customer_id: Number(document.getElementById('job-cid').value),
+      bike_description: document.getElementById('job-bike').value,
+      description: document.getElementById('job-desc').value,
+      quoted_amount: Number(document.getElementById('job-amt').value)||0
+    })});
+    el.innerHTML = '<div class="msg ok">Job created.</div>';
+    loadJobs();
+  } catch(e){ el.innerHTML = `<div class="msg err">${e.message}</div>`; }
+}
+
+// ---------- Finance ----------
+const importsLog = [];
+async function importSettlement(){
+  const el = document.getElementById('st-result');
+  try{
+    const r = await api('/finance/settlements/import', {method:'POST', body: JSON.stringify({
+      channel: document.getElementById('st-channel').value,
+      reference: document.getElementById('st-ref').value,
+      gross_amount: Number(document.getElementById('st-gross').value)||0,
+      fees: Number(document.getElementById('st-fees').value)||0
+    })});
+    el.innerHTML = `<div class="msg ${r.matched_order_id?'ok':'err'}">${r.matched_order_id ? `Matched to order #${r.matched_order_id}` : 'No matching order found'}</div>`;
+    importsLog.unshift(r);
+    document.getElementById('card-imports').style.display = 'block';
+    document.getElementById('tbl-imports').innerHTML = '<tr><th>Channel</th><th>Reference</th><th>Net</th><th>Matched order</th></tr>' +
+      importsLog.map(i=>`<tr><td>${i.channel}</td><td>${i.reference}</td><td>฿${i.net_amount}</td><td>${i.matched_order_id ? '#'+i.matched_order_id : '—'}</td></tr>`).join('');
+  } catch(e){ el.innerHTML = `<div class="msg err">${e.message}</div>`; }
+}
+async function ocrInvoice(){
+  const el = document.getElementById('ocr-result');
+  try{
+    const r = await api('/finance/invoices/ocr', {method:'POST', body: JSON.stringify({image_base64: document.getElementById('ocr-b64').value})});
+    el.innerHTML = `<div class="msg ${r.vendor?'ok':'err'}">vendor: ${r.vendor||'(empty — OCR not connected yet)'} · amount: ฿${r.amount}</div>`;
+  } catch(e){ el.innerHTML = `<div class="msg err">${e.message}</div>`; }
+}
+
+// ---------- Analytics ----------
+async function loadSalesSummary(){
+  try{
+    const s = await api('/analytics/sales-summary');
+    document.getElementById('sales-summary').innerHTML =
+      `Total verified revenue: <b>฿${(s.total_verified_revenue||0).toLocaleString()}</b><br>` +
+      Object.entries(s.by_channel||{}).map(([c,a])=>`${c}: ฿${a}`).join('<br>') || 'No verified orders yet.';
+  } catch(e){}
+}
+
+checkHealth();
+</script>
+</body>
+</html>

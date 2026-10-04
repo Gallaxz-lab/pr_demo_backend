@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PR.Racing Shop — ตัวอย่างระบบทั้งหมด</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asphalt:#17181a;--panel:#212327;--panel-2:#292b30;--line:#3a3d43;
+  --text:#e6e8ea;--muted:#9aa0a8;--amber:#f2a93b;--red:#e8432f;--green:#4cc584;
+  --fh:'Space Grotesk',system-ui,sans-serif;--fb:'Noto Sans Thai',system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--asphalt);color:var(--text);font-family:var(--fb);}
+header{padding:16px 20px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(23,24,26,.96);backdrop-filter:blur(6px);z-index:10;padding-top:calc(16px + env(safe-area-inset-top,0px));}
+h1{font-family:var(--fh);font-size:19px;margin:0 0 2px;font-weight:700;}
+h1 span{color:var(--amber);}
+.sub{color:var(--muted);font-size:12.5px;}
+nav{display:flex;gap:5px;padding:10px 20px;border-bottom:1px solid var(--line);overflow-x:auto;}
+nav button{background:none;border:1px solid transparent;color:var(--muted);padding:7px 12px;border-radius:5px;cursor:pointer;font-family:var(--fb);font-weight:600;font-size:12.5px;white-space:nowrap;}
+nav button.active{background:var(--panel);color:var(--amber);border-color:var(--line);}
+main{max-width:1080px;margin:0 auto;padding:20px 18px 60px;}
+.view{display:none;}
+.view.active{display:block;}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
+.kpi .n{font-family:var(--fh);font-size:24px;font-weight:700;color:var(--amber);}
+.kpi .l{color:var(--muted);font-size:11.5px;margin-top:2px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px;}
+.card h2{font-family:var(--fh);font-size:14.5px;margin:0;padding:12px 15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-weight:700;}
+.card h2 small{color:var(--muted);font-family:var(--fb);font-weight:400;font-size:11px;}
+.card .body{padding:14px 15px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+th{color:var(--muted);font-weight:500;font-size:11px;}
+tr:last-child td{border-bottom:none;}
+.pill{font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.pill.new,.pill.pending,.pill.quoted{background:rgba(232,67,47,.15);color:var(--red);}
+.pill.packing,.pill.approved{background:rgba(242,169,59,.15);color:var(--amber);}
+.pill.done,.pill.verified,.pill.completed{background:rgba(76,197,132,.15);color:var(--green);}
+.pill.progress{background:rgba(90,155,212,.15);color:#8fc3f0;}
+button.act{background:var(--amber);color:#1a1200;border:none;padding:8px 14px;border-radius:4px;font-family:var(--fb);font-weight:700;font-size:12.5px;cursor:pointer;}
+button.act:hover{background:#ffbd5c;}
+button.sm{background:var(--panel-2);border:1px solid var(--line);color:var(--amber);font-size:11px;padding:4px 9px;border-radius:4px;cursor:pointer;font-family:var(--fb);}
+button.sm:disabled{opacity:.3;cursor:default;}
+label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;}
+select,input{background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:8px 10px;border-radius:4px;font-size:13px;width:100%;font-family:var(--fb);}
+.row{display:grid;gap:10px;margin-bottom:10px;}
+.row.g3{grid-template-columns:1fr 1fr auto;align-items:end;}
+.row.g2{grid-template-columns:1fr 1fr;}
+.result{margin-top:10px;padding:10px 12px;border-radius:4px;font-size:13px;display:none;}
+.result.show{display:block;}
+.result.ok{background:rgba(76,197,132,.12);color:var(--green);}
+.result.bad{background:rgba(232,67,47,.12);color:var(--red);}
+.result.warn{background:rgba(242,169,59,.12);color:var(--amber);}
+.msg{padding:11px 15px;border-bottom:1px solid var(--line);cursor:pointer;}
+.msg:last-child{border-bottom:none;}
+.msg .top{font-size:11.5px;color:var(--muted);margin-bottom:4px;}
+.reply{display:none;margin-top:9px;background:var(--panel-2);border-left:2px solid var(--amber);padding:9px 11px;border-radius:0 4px 4px 0;font-size:12.5px;}
+.reply.show{display:block;}
+.reply small{display:block;margin-top:6px;color:var(--muted);font-family:var(--fh);font-size:10.5px;}
+.bar-row{display:grid;grid-template-columns:70px 1fr 60px;align-items:center;gap:10px;margin-bottom:9px;font-size:12px;}
+.bar-track{background:var(--panel-2);border-radius:3px;height:15px;overflow:hidden;}
+.bar-fill{height:100%;}
+.steps{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.step{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:6px 10px;font-size:11px;color:var(--muted);}
+.step b{font-family:var(--fh);color:var(--amber);}
+.invoice-scene{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.invoice-paper{background:#e9e6de;color:#2a2a28;border-radius:4px;padding:15px;font-size:12px;}
+.invoice-paper .ihead{font-weight:700;margin-bottom:8px;}
+.invoice-paper .iline{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #c9c5ba;}
+.invoice-paper .itotal{display:flex;justify-content:space-between;padding-top:7px;font-weight:700;}
+.extract-box{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:13px;font-size:12.5px;}
+.extract-box .field{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);}
+.extract-box .field span:first-child{color:var(--muted);}
+.placeholder{color:var(--muted);font-style:italic;text-align:center;padding:26px 8px;font-size:12px;}
+.note{color:var(--muted);font-size:11px;text-align:center;padding:14px;}
+@media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr);}.row.g2,.row.g3{grid-template-columns:1fr;}.invoice-scene{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>PR.<span>Racing</span> Shop</h1>
+  <div class="sub">ตัวอย่างหน้าจอระบบทั้งหมด · ข้อมูลจำลองเพื่อการนำเสนอ</div>
+</header>
+<nav id="tabs"></nav>
+<main>
+
+<div class="view active" id="v-dash">
+  <div class="kpis">
+    <div class="kpi"><div class="n">14</div><div class="l">คำสั่งซื้อวันนี้</div></div>
+    <div class="kpi"><div class="n">3</div><div class="l">สินค้าใกล้หมด</div></div>
+    <div class="kpi"><div class="n">5</div><div class="l">รอตรวจสอบการชำระเงิน</div></div>
+    <div class="kpi"><div class="n">42</div><div class="l">AI ตอบคำถามวันนี้</div></div>
+  </div>
+  <div class="card"><h2>สินค้าใกล้หมดสต็อก</h2><div class="body"><table>
+    <tr><th>รหัส SKU</th><th>สินค้า</th><th>คงเหลือ</th></tr>
+    <tr><td>SPK-15T-428</td><td>สเตอร์แข่ง 15 ฟัน</td><td style="color:var(--red)">2</td></tr>
+    <tr><td>BRK-SPT-W125</td><td>ปั๊มเบรกหลังสปอร์ต</td><td style="color:var(--red)">1</td></tr>
+    <tr><td>ADP-PCX160</td><td>อะแดปเตอร์ปั๊มเบรก</td><td style="color:var(--red)">0</td></tr>
+  </table></div></div>
+</div>
+
+<div class="view" id="v-catalog">
+  <div class="card"><h2>แคตตาล็อกสินค้าและความเข้ากันได้</h2><div class="body"><table>
+    <tr><th>รหัส SKU</th><th>สินค้า</th><th>รุ่นที่ใช้ได้</th><th>ราคา</th><th>สต็อก</th></tr>
+    <tr><td>EX-155-FULL</td><td>ท่อไอเสียเต็มระบบ</td><td>Exciter 155 (2019–2024)</td><td>฿8,900</td><td>4</td></tr>
+    <tr><td>SPK-15T-428</td><td>สเตอร์แข่ง 15 ฟัน</td><td>Exciter 155, CBR150R</td><td>฿650</td><td>2</td></tr>
+    <tr><td>ECU-RMP-01</td><td>ชุดปรับ ECU</td><td>CBR150R, PCX 160</td><td>฿3,500</td><td>9</td></tr>
+    <tr><td>BRK-SPT-W125</td><td>ปั๊มเบรกหลังสปอร์ต</td><td>Wave 125i (2018–2023)</td><td>฿1,200</td><td>1</td></tr>
+    <tr><td>SHK-ADJ-R1</td><td>โช้คหลังปรับได้</td><td>Wave 125i, Exciter 155</td><td>฿4,200</td><td>6</td></tr>
+    <tr><td>ADP-PCX160</td><td>อะแดปเตอร์ปั๊มเบรก</td><td>PCX 160 (2021–2024)</td><td>฿350</td><td>0</td></tr>
+  </table></div></div>
+  <div class="card"><h2>เครื่องมือตรวจสอบความเข้ากันได้</h2><div class="body">
+    <div class="row g3">
+      <div><label>รุ่นรถ</label><select id="ck-bike">
+        <option value="wave125">Honda Wave 125i</option>
+        <option value="pcx160">Honda PCX 160</option>
+        <option value="exciter155">Yamaha Exciter 155</option>
+        <option value="cbr150r">Honda CBR150R</option>
+      </select></div>
+      <div><label>อะไหล่</label><select id="ck-part">
+        <option value="exhaust">ท่อไอเสียเต็มระบบ</option>
+        <option value="sprocket15">สเตอร์แข่ง 15 ฟัน</option>
+        <option value="rearbrake">ปั๊มเบรกหลังสปอร์ต</option>
+        <option value="ecu">ชุดปรับ ECU</option>
+      </select></div>
+      <div><button class="act" onclick="checkFit()">ตรวจสอบ</button></div>
+    </div>
+    <div class="result" id="ck-result"></div>
+  </div></div>
+</div>
+
+<div class="view" id="v-inv">
+  <div class="card"><h2>ระดับสต็อกสินค้า</h2><div class="body"><table>
+    <tr><th>รหัส SKU</th><th>คงเหลือ</th><th>จุดสั่งซื้อ</th></tr>
+    <tr><td>EX-155-FULL</td><td>4</td><td>3</td></tr>
+    <tr><td>SPK-15T-428</td><td style="color:var(--red)">2</td><td>3</td></tr>
+    <tr><td>ECU-RMP-01</td><td>9</td><td>3</td></tr>
+    <tr><td>BRK-SPT-W125</td><td style="color:var(--red)">1</td><td>3</td></tr>
+  </table></div></div>
+  <div class="card"><h2>ประวัติการเคลื่อนไหวสต็อก</h2><div class="body"><table id="mv-table">
+    <tr><th>เวลา</th><th>รหัส SKU</th><th>เปลี่ยนแปลง</th><th>เหตุผล</th></tr>
+    <tr><td>09:14</td><td>SPK-15T-428</td><td style="color:var(--red)">−1</td><td>คำสั่งซื้อ #1042 จัดส่งแล้ว</td></tr>
+    <tr><td>10:02</td><td>EX-155-FULL</td><td style="color:var(--green)">+6</td><td>รับสินค้าจากซัพพลายเออร์</td></tr>
+  </table></div></div>
+  <div class="card"><h2>บันทึกการเคลื่อนไหวสต็อก</h2><div class="body">
+    <div class="row g3">
+      <div><label>รหัส SKU</label><input id="mv-sku" placeholder="เช่น BRK-SPT-W125"></div>
+      <div><label>จำนวน (+เข้า / -ออก)</label><input id="mv-chg" type="number"></div>
+      <div><button class="act" onclick="addMovement()">บันทึก</button></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="view" id="v-orders">
+  <div class="card"><h2>คำสั่งซื้อทั้งหมด</h2><div class="body"><table>
+    <tr><th>เลขที่</th><th>ลูกค้า</th><th>ช่องทาง</th><th>สถานะ</th><th>การชำระเงิน</th><th>ยอดเงิน</th><th></th></tr>
+    <tr><td>#1051</td><td>คุณเอก</td><td>LINE</td><td><span class="pill new">ใหม่</span></td><td><span class="pill pending" id="pay0">รอตรวจสอบ</span></td><td>฿8,900</td><td><button class="sm" onclick="verifyOrder(0)">ยืนยัน</button></td></tr>
+    <tr><td>#1052</td><td>สมชาย_88</td><td>Shopee</td><td><span class="pill packing">กำลังแพ็ค</span></td><td><span class="pill verified">ยืนยันแล้ว</span></td><td>฿650</td><td><button class="sm" disabled>ยืนยัน</button></td></tr>
+    <tr><td>#1053</td><td>Nattapong K.</td><td>LINE</td><td><span class="pill new">ใหม่</span></td><td><span class="pill pending" id="pay1">รอตรวจสอบ</span></td><td>฿3,500</td><td><button class="sm" onclick="verifyOrder(1)">ยืนยัน</button></td></tr>
+    <tr><td>#1054</td><td>คุณนุช</td><td>Lazada</td><td><span class="pill packing">กำลังแพ็ค</span></td><td><span class="pill verified">ยืนยันแล้ว</span></td><td>฿4,200</td><td><button class="sm" disabled>ยืนยัน</button></td></tr>
+  </table></div></div>
+</div>
+
+<div class="view" id="v-ai">
+  <div class="card"><h2>AI ตอบคำถามลูกค้า <small>ช่องทาง LINE — คลิกที่ข้อความ</small></h2>
+    <div class="msg" onclick="toggleReply(0)"><div class="top">LINE · 2 นาทีที่แล้ว</div>
+      "ท่อนี้ใส่กับ Honda Wave 125i ปี 2021 ได้ไหมครับ"
+      <div class="reply" id="r0">ท่อไอเสียรุ่นนี้ไม่รองรับ Wave 125i ครับ ใส่ได้เฉพาะ Exciter 155 (2019–2024) — แนะนำรุ่นอื่นให้ได้ไหมครับ?<small>อ้างอิงจากแคตตาล็อก · SKU EX-155-FULL</small></div>
+    </div>
+    <div class="msg" onclick="toggleReply(1)"><div class="top">LINE · 14 นาทีที่แล้ว</div>
+      "สเตอร์ 15T ใส่ Exciter 155 ปี 2023 ได้มั้ยคะ"
+      <div class="reply" id="r1">ใส่ได้ค่ะ ตรงรุ่นเลย ตอนนี้เหลือ 2 ชิ้น ราคา ฿650 ต้องการให้แอดมินยืนยันออเดอร์เลยไหมคะ?<small>อ้างอิงจากแคตตาล็อก · SKU SPK-15T-428 คงเหลือ 2</small></div>
+    </div>
+    <div class="msg" onclick="toggleReply(2)"><div class="top">LINE · 41 นาทีที่แล้ว</div>
+      "ปั๊มเบรกหลังตัวนี้ รองรับ PCX 160 รึเปล่าครับ"
+      <div class="reply" id="r2">รุ่นนี้ออกแบบมาสำหรับ Wave 125i ครับ กับ PCX 160 ต้องใช้อะแดปเตอร์เพิ่ม ตอนนี้ของหมดชั่วคราว แอดมินจะแจ้งเมื่อของเข้าครับ<small>อ้างอิงจากแคตตาล็อก · SKU ADP-PCX160 คงเหลือ 0</small></div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="v-shop">
+  <div class="card"><h2>งานซ่อมในอู่</h2><div class="body"><table>
+    <tr><th>ลูกค้า</th><th>รถ</th><th>รายการ</th><th>ช่าง</th><th>สถานะ</th><th>ราคา</th><th></th></tr>
+    <tr id="job0"><td>คุณเอก</td><td>Exciter 155</td><td>เปลี่ยนโช้คหลัง</td><td>—</td><td><span class="pill quoted">รอใบเสนอราคา</span></td><td>฿4,200</td><td><button class="sm" onclick="advanceJob(0)">อนุมัติ</button></td></tr>
+    <tr id="job1"><td>สมชาย</td><td>Wave 125i</td><td>เปลี่ยนปั๊มเบรกหลัง</td><td>ช่างโอ๊ต</td><td><span class="pill approved">อนุมัติแล้ว</span></td><td>฿1,200</td><td><button class="sm" onclick="advanceJob(1)">เริ่มงาน</button></td></tr>
+    <tr id="job2"><td>Nattapong K.</td><td>CBR150R</td><td>ปรับ ECU</td><td>ช่างเบิร์ด</td><td><span class="pill progress">กำลังทำ</span></td><td>฿3,500</td><td><button class="sm" onclick="advanceJob(2)">เสร็จสิ้น</button></td></tr>
+    <tr id="job3"><td>คุณนุช</td><td>Wave 125i</td><td>เปลี่ยนโช้คหลัง</td><td>ช่างโอ๊ต</td><td><span class="pill done">เสร็จแล้ว</span></td><td>฿4,200</td><td><button class="sm" disabled>—</button></td></tr>
+  </table></div></div>
+</div>
+
+<div class="view" id="v-fin">
+  <div class="card"><h2>กระทบยอดการชำระเงินจากมาร์เก็ตเพลส</h2><div class="body">
+    <div class="steps">
+      <div class="step"><b>1</b> แพลตฟอร์มส่งออกรายการจ่ายเงิน</div>
+      <div class="step"><b>2</b> ระบบอ่านเลขอ้างอิง + ยอดสุทธิ</div>
+      <div class="step"><b>3</b> จับคู่กับคำสั่งซื้อในระบบ</div>
+      <div class="step"><b>4</b> ตรงกัน → กระทบยอดอัตโนมัติ / ไม่ชัดเจน → แจ้งให้ตรวจสอบ</div>
+    </div>
+    <table id="settle-table">
+      <tr><th>ช่องทาง</th><th>เลขอ้างอิง</th><th>ยอดสุทธิ</th><th>ผลลัพธ์</th></tr>
+      <tr data-order="1042"><td>Shopee</td><td>SHP-PAYOUT-1042-0921</td><td>฿8,455</td><td><span class="pill" style="background:var(--panel-2);color:var(--muted);">ยังไม่รัน</span></td></tr>
+      <tr data-order=""><td>Lazada</td><td>LZD-BATCH-0922-A17</td><td>฿3,200</td><td><span class="pill" style="background:var(--panel-2);color:var(--muted);">ยังไม่รัน</span></td></tr>
+      <tr data-order="1046"><td>Lazada</td><td>LZD-BATCH-0922-1046</td><td>฿4,074</td><td><span class="pill" style="background:var(--panel-2);color:var(--muted);">ยังไม่รัน</span></td></tr>
+    </table>
+    <button class="act" id="reconBtn" onclick="runRecon()">เริ่มกระทบยอด</button>
+  </div></div>
+  <div class="card"><h2>OCR ใบแจ้งหนี้ → รายการร่างทางบัญชี</h2><div class="body">
+    <div class="invoice-scene">
+      <div>
+        <div class="invoice-paper">
+          <div class="ihead">TH Parts Supply Co., Ltd.</div>
+          <div class="iline"><span>เลขที่ใบแจ้งหนี้</span><span>INV-88213</span></div>
+          <div class="iline"><span>วันที่</span><span>22 ก.ย. 2569</span></div>
+          <div class="iline"><span>ท่อไอเสีย x4</span><span>฿12,400</span></div>
+          <div class="iline"><span>สเตอร์ x20</span><span>฿8,000</span></div>
+          <div class="iline"><span>VAT 7%</span><span>฿1,428</span></div>
+          <div class="itotal"><span>รวม</span><span>฿21,828</span></div>
+        </div>
+        <button class="act" style="margin-top:10px;width:100%;" onclick="runOcr()">ดึงข้อมูลด้วย OCR</button>
+      </div>
+      <div class="extract-box" id="extractBox"><div class="placeholder">รายการร่างจะปรากฏที่นี่หลังดึงข้อมูล</div></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="view" id="v-analytics">
+  <div class="card"><h2>ยอดขายแยกตามช่องทาง</h2><div class="body">
+    <div class="bar-row"><span>Facebook</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:#5a9bd4"></div></div><span>฿94.2k</span></div>
+    <div class="bar-row"><span>Shopee</span><div class="bar-track"><div class="bar-fill" style="width:41%;background:#ffb573"></div></div><span>฿48.1k</span></div>
+    <div class="bar-row"><span>Lazada</span><div class="bar-track"><div class="bar-fill" style="width:26%;background:#5fcf8f"></div></div><span>฿28.9k</span></div>
+    <div class="bar-row"><span>LINE</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:#e8a9d9"></div></div><span>฿13.4k</span></div>
+  </div></div>
+  <div class="card"><h2>พยากรณ์สินค้าใกล้หมด</h2><div class="body"><table>
+    <tr><th>รหัส SKU</th><th>คงเหลือ</th><th>จุดสั่งซื้อ</th></tr>
+    <tr><td>SPK-15T-428</td><td>2</td><td>3</td></tr>
+    <tr><td>BRK-SPT-W125</td><td>1</td><td>3</td></tr>
+    <tr><td>ADP-PCX160</td><td>0</td><td>3</td></tr>
+  </table></div></div>
+</div>
+
+<div class="note">ตัวอย่างนี้ใช้ข้อมูลจำลองเพื่อการนำเสนอ — โครงสร้างและตรรกะตรงกับระบบจริงที่กำลังพัฒนา</div>
+</main>
+<script>
+const TABS=[["dash","แดชบอร์ด"],["catalog","แคตตาล็อก"],["inv","คลังสินค้า"],["orders","คำสั่งซื้อ"],["ai","ถาม-ตอบ AI"],["shop","งานซ่อม"],["fin","การเงิน"],["analytics","วิเคราะห์ข้อมูล"]];
+const tabsEl=document.getElementById('tabs');
+TABS.forEach(([id,label],i)=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>show(id);if(i===0)b.classList.add('active');b.dataset.tab=id;tabsEl.appendChild(b);});
+function show(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+}
+function toggleReply(i){document.getElementById('r'+i).classList.toggle('show');}
+function verifyOrder(i){const el=document.getElementById('pay'+i);el.textContent='ยืนยันแล้ว';el.className='pill verified';}
+function addMovement(){
+  const sku=document.getElementById('mv-sku').value||'—',chg=document.getElementById('mv-chg').value||'0';
+  const t=document.getElementById('mv-table');
+  const tr=document.createElement('tr');
+  const now=new Date();const time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  tr.innerHTML=`<td>${time}</td><td>${sku}</td><td style="color:${chg>=0?'var(--green)':'var(--red)'}">${chg>=0?'+':''}${chg}</td><td>บันทึกด้วยตนเอง</td>`;
+  t.appendChild(tr);
+}
+const matrix={wave125:{exhaust:'bad',sprocket15:'bad',rearbrake:'ok',ecu:'bad'},pcx160:{exhaust:'bad',sprocket15:'bad',rearbrake:'warn',ecu:'ok'},exciter155:{exhaust:'ok',sprocket15:'ok',rearbrake:'bad',ecu:'bad'},cbr150r:{exhaust:'bad',sprocket15:'ok',rearbrake:'bad',ecu:'ok'}};
+const msgs={ok:'เข้ากันได้ — ใส่ได้ทันที ตรงกับข้อมูลในแคตตาล็อก',warn:'เข้ากันได้ แต่ต้องใช้อะแดปเตอร์เพิ่ม',bad:'ไม่เข้ากัน — ไม่พบข้อมูลรองรับรุ่นนี้ในแคตตาล็อก'};
+function checkFit(){
+  const b=document.getElementById('ck-bike').value,p=document.getElementById('ck-part').value;
+  const v=matrix[b][p];const el=document.getElementById('ck-result');
+  el.className='result show '+v;el.textContent=msgs[v];
+}
+function advanceJob(i){
+  const row=document.getElementById('job'+i);const pill=row.querySelector('.pill');const btn=row.querySelector('button');
+  if(pill.classList.contains('quoted')){pill.className='pill approved';pill.textContent='อนุมัติแล้ว';btn.textContent='เริ่มงาน';}
+  else if(pill.classList.contains('approved')){pill.className='pill progress';pill.textContent='กำลังทำ';btn.textContent='เสร็จสิ้น';}
+  else if(pill.classList.contains('progress')){pill.className='pill done';pill.textContent='เสร็จแล้ว';btn.disabled=true;btn.textContent='—';}
+}
+function runRecon(){
+  document.getElementById('reconBtn').disabled=true;
+  document.querySelectorAll('#settle-table tr[data-order]').forEach((row,i)=>{
+    setTimeout(()=>{
+      const has=row.dataset.order.length>0;const cell=row.querySelector('td:last-child');
+      cell.innerHTML=has?`<span class="pill verified">จับคู่กับ #${row.dataset.order}</span>`:`<span class="pill pending">ต้องตรวจสอบ</span>`;
+    },i*380);
+  });
+}
+function runOcr(){
+  const box=document.getElementById('extractBox');
+  box.innerHTML='<div class="placeholder">กำลังอ่านใบแจ้งหนี้…</div>';
+  setTimeout(()=>{
+    box.innerHTML=`<div class="field"><span>ผู้ขาย</span><span>TH Parts Supply Co., Ltd.</span></div>
+    <div class="field"><span>เลขที่</span><span>INV-88213</span></div>
+    <div class="field"><span>ยอดรวม</span><span>฿21,828</span></div>
+    <div class="field"><span>สถานะ</span><span style="color:var(--amber)">ร่าง — รอตรวจสอบ</span></div>`;
+  },800);
+}
+</script>
+</body>
+</html>

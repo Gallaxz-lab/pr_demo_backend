@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Finance Module — Phase 3 Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asphalt:#17181a; --panel:#212327; --panel-2:#292b30; --line:#3a3d43;
+  --text:#e6e8ea; --muted:#9aa0a8; --amber:#f2a93b; --red:#e8432f; --green:#4cc584;
+  --font-head:'Space Grotesk',system-ui,sans-serif; --font-body:'Inter',system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--asphalt);color:var(--text);font-family:var(--font-body);}
+header{padding:20px 22px 14px;border-bottom:1px solid var(--line);}
+h1{font-family:var(--font-head);font-size:20px;margin:0 0 4px;font-weight:700;}
+h1 span{color:var(--amber);}
+.sub{color:var(--muted);font-size:13px;}
+main{max-width:1000px;margin:0 auto;padding:22px 18px 60px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:22px;overflow:hidden;}
+.card h2{font-family:var(--font-head);font-size:16px;margin:0;padding:14px 16px;border-bottom:1px solid var(--line);}
+.card .body{padding:16px;}
+.card .body p{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 14px;}
+.steps{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.step{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:8px 12px;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.step b{font-family:var(--font-head);color:var(--amber);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:14px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);}
+th{color:var(--muted);font-weight:500;font-size:11px;}
+tr.matched{background:rgba(76,197,132,.06);}
+tr.unmatched{background:rgba(232,67,47,.06);}
+.pill{font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.pill.match{background:rgba(76,197,132,.15);color:var(--green);}
+.pill.nomatch{background:rgba(232,67,47,.15);color:var(--red);}
+.pill.wait{background:var(--panel-2);color:var(--muted);}
+button.act{background:var(--amber);color:#1a1200;border:none;padding:9px 16px;border-radius:4px;font-family:var(--font-head);font-weight:700;font-size:12.5px;cursor:pointer;}
+button.act:hover{background:#ffbd5c;}
+button.act:disabled{opacity:.4;cursor:default;}
+.callout{background:var(--panel-2);border-left:2px solid var(--amber);padding:10px 12px;border-radius:0 4px 4px 0;font-size:12.5px;color:var(--text);margin-top:12px;display:none;}
+.callout.show{display:block;}
+/* invoice mock */
+.invoice-scene{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.invoice-paper{background:#e9e6de;color:#2a2a28;border-radius:4px;padding:18px;font-size:12px;font-family:var(--font-body);}
+.invoice-paper .ihead{font-family:var(--font-head);font-weight:700;font-size:14px;margin-bottom:10px;}
+.invoice-paper .iline{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #c9c5ba;}
+.invoice-paper .itotal{display:flex;justify-content:space-between;padding-top:8px;font-weight:700;}
+.extract-box{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:14px;font-size:12.5px;min-height:100%;}
+.extract-box .field{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);}
+.extract-box .field span:first-child{color:var(--muted);}
+.extract-box .placeholder{color:var(--muted);font-style:italic;text-align:center;padding:30px 10px;}
+.status-track{display:flex;gap:6px;margin-top:14px;}
+.status-track .s{flex:1;text-align:center;padding:7px 4px;border-radius:4px;font-size:11px;font-family:var(--font-head);font-weight:600;background:var(--panel-2);color:var(--muted);border:1px solid var(--line);}
+.status-track .s.active{background:rgba(242,169,59,.15);color:var(--amber);border-color:var(--amber);}
+.status-track .s.done{background:rgba(76,197,132,.15);color:var(--green);border-color:var(--green);}
+.note{color:var(--muted);font-size:11.5px;text-align:center;padding:16px;}
+@media(max-width:720px){.invoice-scene{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Finance module <span>— Phase 3</span></h1>
+  <div class="sub">Concept preview: how settlement reconciliation and invoice OCR will work, with sample data</div>
+</header>
+<main>
+
+  <div class="card">
+    <h2>1. Marketplace settlement reconciliation</h2>
+    <div class="body">
+      <p>Shopee, Lazada and other channels pay out in batches, not per order — a settlement report lists many transactions at once, each with fees already deducted. The system needs to match each payout line back to the exact order it belongs to, automatically.</p>
+      <div class="steps">
+        <div class="step"><b>1</b> Platform exports payout batch</div>
+        <div class="step"><b>2</b> System reads reference + net amount</div>
+        <div class="step"><b>3</b> Matches against your order records</div>
+        <div class="step"><b>4</b> Confirmed → auto-reconciled. Unclear → flagged for review</div>
+      </div>
+
+      <table id="settle-table">
+        <tr><th>Channel</th><th>Settlement reference</th><th>Gross</th><th>Fees</th><th>Net</th><th>Result</th></tr>
+        <tr data-order="1042" data-net="8455"><td>Shopee</td><td>SHP-PAYOUT-1042-0921</td><td>฿8,900</td><td>฿445</td><td>฿8,455</td><td><span class="pill wait">not run</span></td></tr>
+        <tr data-order="1045" data-net="1140"><td>Shopee</td><td>SHP-PAYOUT-1045-0921</td><td>฿1,200</td><td>฿60</td><td>฿1,140</td><td><span class="pill wait">not run</span></td></tr>
+        <tr data-order="" data-net="3200"><td>Lazada</td><td>LZD-BATCH-0922-A17</td><td>฿3,360</td><td>฿160</td><td>฿3,200</td><td><span class="pill wait">not run</span></td></tr>
+        <tr data-order="1046" data-net="4074"><td>Lazada</td><td>LZD-BATCH-0922-1046</td><td>฿4,200</td><td>฿126</td><td>฿4,074</td><td><span class="pill wait">not run</span></td></tr>
+      </table>
+
+      <button class="act" id="reconBtn" onclick="runReconciliation()">Run reconciliation</button>
+      <div class="callout" id="reconNote">
+        <b style="font-family:var(--font-head);color:var(--amber);">Result: </b>
+        3 of 4 lines matched automatically. The Lazada batch <code>LZD-BATCH-0922-A17</code> has no order number embedded in its reference and its amount doesn't line up closely enough with any open order — it's flagged for a human to check, rather than guessed at.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Invoice OCR → draft accounting entry</h2>
+    <div class="body">
+      <p>A supplier invoice photo gets read automatically and turned into a draft record — someone still reviews and approves it before it posts to the books, but the manual re-typing is gone.</p>
+      <div class="invoice-scene">
+        <div>
+          <div class="invoice-paper">
+            <div class="ihead">TH Parts Supply Co., Ltd.</div>
+            <div class="iline"><span>Invoice #</span><span>INV-88213</span></div>
+            <div class="iline"><span>Date</span><span>22 Sep 2026</span></div>
+            <div class="iline"><span>Exhaust headers x4</span><span>฿12,400</span></div>
+            <div class="iline"><span>Sprockets x20</span><span>฿8,000</span></div>
+            <div class="iline"><span>VAT 7%</span><span>฿1,428</span></div>
+            <div class="itotal"><span>Total</span><span>฿21,828</span></div>
+          </div>
+          <button class="act" style="margin-top:12px;width:100%;" id="ocrBtn" onclick="runOcr()">Extract with OCR</button>
+        </div>
+        <div class="extract-box" id="extractBox">
+          <div class="placeholder">Draft record will appear here after extraction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">This is a concept walkthrough with sample data — the real endpoints exist and the workflow logic is built, but automatic matching against actual Shopee/Lazada export formats and live OCR both need those platforms' API access to go from "sample" to "live."</div>
+</main>
+
+<script>
+function runReconciliation(){
+  document.getElementById('reconBtn').disabled = true;
+  const rows = document.querySelectorAll('#settle-table tr[data-order]');
+  rows.forEach((row, i) => {
+    setTimeout(() => {
+      const hasOrder = row.dataset.order.length > 0;
+      const cell = row.querySelector('td:last-child');
+      if(hasOrder){
+        cell.innerHTML = `<span class="pill match">matched → order #${row.dataset.order}</span>`;
+        row.classList.add('matched');
+      } else {
+        cell.innerHTML = `<span class="pill nomatch">needs review</span>`;
+        row.classList.add('unmatched');
+      }
+      if(i === rows.length - 1){
+        document.getElementById('reconNote').classList.add('show');
+      }
+    }, i * 380);
+  });
+}
+
+function runOcr(){
+  document.getElementById('ocrBtn').disabled = true;
+  const box = document.getElementById('extractBox');
+  box.innerHTML = '<div class="placeholder">Reading invoice…</div>';
+  setTimeout(() => {
+    box.innerHTML = `
+      <div class="field"><span>Vendor</span><span>TH Parts Supply Co., Ltd.</span></div>
+      <div class="field"><span>Invoice #</span><span>INV-88213</span></div>
+      <div class="field"><span>Date</span><span>22 Sep 2026</span></div>
+      <div class="field"><span>Amount (incl. VAT)</span><span>฿21,828</span></div>
+      <div class="status-track">
+        <div class="s active" id="st-draft">Draft</div>
+        <div class="s" id="st-reviewed">Reviewed</div>
+        <div class="s" id="st-posted">Posted</div>
+      </div>
+      <button class="act" style="margin-top:12px;width:100%;" onclick="advanceStatus()">Mark as reviewed →</button>
+    `;
+  }, 900);
+}
+
+let statusStep = 0;
+function advanceStatus(){
+  statusStep++;
+  const ids = ['st-draft','st-reviewed','st-posted'];
+  ids.forEach((id,i)=>{
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+    if(i < statusStep) el.classList.add('done');
+    if(i === statusStep) el.classList.add('active');
+  });
+  const btn = document.querySelector('.extract-box button');
+  if(statusStep === 1){ btn.textContent = 'Post to accounting →'; }
+  if(statusStep >= 2){ btn.remove(); }
+}
+</script>
+</body>
+</html>
