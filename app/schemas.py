@@ -126,3 +126,59 @@ class SettlementImportCreate(BaseModel):
 class InvoiceOcrRequest(BaseModel):
     image_base64: str
     media_type: str = "image/jpeg"  # e.g. image/jpeg, image/png
+
+
+class InvoiceRecordOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    vendor: str
+    amount: float
+    status: str
+    created_at: datetime
+
+
+class SettlementImportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    channel: str
+    reference: str
+    net_amount: float
+    matched_order_id: Optional[int]
+    imported_at: datetime
+
+
+# ---------- ERP core: procurement ----------
+class SupplierCreate(BaseModel):
+    name: str
+    contact: str = ""
+    phone: str = ""
+
+
+class SupplierOut(SupplierCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class POItemCreate(BaseModel):
+    product_id: int
+    quantity: int
+    unit_cost: float
+
+
+class POItemOut(POItemCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class PurchaseOrderCreate(BaseModel):
+    supplier_id: int
+    items: List[POItemCreate]
+
+
+class PurchaseOrderOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    supplier_id: int
+    status: str
+    created_at: datetime
+    items: List[POItemOut] = []

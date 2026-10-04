@@ -5,9 +5,15 @@ from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
 from app.models.user import AdminUser
 from app.models.workshop import RepairJob, JobStatus
 from app.models.finance import SettlementImport, InvoiceRecord
+from app.models.ledger import Account, AccountType, JournalEntry, JournalLine
+from app.models.procurement import Supplier, PurchaseOrder, PurchaseOrderItem, POStatus
+from app.models.audit import AuditLog
 
 __all__ = [
     "Product", "Compatibility", "StockLevel", "StockMovement", "Customer",
     "Order", "OrderItem", "OrderStatus", "PaymentStatus", "AdminUser",
     "RepairJob", "JobStatus", "SettlementImport", "InvoiceRecord",
+    "Account", "AccountType", "JournalEntry", "JournalLine",
+    "Supplier", "PurchaseOrder", "PurchaseOrderItem", "POStatus",
+    "AuditLog",
 ]

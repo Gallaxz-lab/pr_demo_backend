@@ -14,6 +14,7 @@ This was built without network/API access, so it splits honestly:
 | **Phase 1** — catalog, inventory, orders, customers, admin auth, catalog-grounded AI Q&A | **Fully working.** Runs end-to-end with `sqlite` and no external accounts. |
 | **Phase 2** — LINE webhook, workshop job management | **Logic complete, integration stubbed.** The webhook parses LINE's event format and routes to the real Q&A engine; `line_service.py` needs a real LINE Official Account's channel secret/token to actually send messages (falls back to printing replies to the console until then). |
 | **Phase 3** — settlement reconciliation, invoice OCR, analytics | **Invoice OCR is real** (Claude vision API — works once `ANTHROPIC_API_KEY` is set; accuracy depends on image quality and hasn't been validated against real supplier invoices yet, which is why the review step before posting still matters). **Settlement reconciliation logic is real but matches against a placeholder reference format** — actual Shopee/Lazada exports need seller-center access to see their real format.
+| **ERP core** — general ledger, chart of accounts, procurement | **Fully working.** Real double-entry posting, a real trial balance, real purchase-order-to-inventory-to-ledger flow. This is what elevates the project from "business admin app" to actual ERP — see the section below. |
 
 Every stub is marked with a docstring explaining exactly what's missing and
 why — search for `STUB` or `Phase 2`/`Phase 3` comments.
@@ -50,6 +51,60 @@ It's a plain file, not a hosted page, because it needs to reach your
 backend on `localhost` — a hosted page can't. The API base URL is
 editable in the top bar if you run the backend somewhere other than
 `http://localhost:8000`.
+
+## ERP core — general ledger + procurement
+
+This is the part that actually makes this an ERP rather than a business
+admin app: every money-moving action posts a real, balanced double-entry
+journal entry, not just a status update.
+
+- **Chart of accounts** — `GET /ledger/accounts`
+- **Trial balance** — `GET /ledger/trial-balance` (owner/admin only)
+- **Journal entries** — `GET /ledger/entries` (owner/admin only)
+- **Suppliers + purchase orders** — `POST /procurement/suppliers`, `POST /procurement/purchase-orders`, `POST /procurement/purchase-orders/{id}/receive` (receiving goods posts a real Inventory/Accounts Payable entry)
+
+What posts automatically:
+| Event | Journal entry |
+|---|---|
+| Order payment verified (LINE/manual) | Dr Cash, Cr Sales Revenue (+ Dr COGS, Cr Inventory if the product has a `cost_price`) |
+| Order payment verified (Shopee/Lazada) | Dr Accounts Receivable, Cr Sales Revenue |
+| Settlement import matches an order | Dr Cash (net), Dr Marketplace Fees Expense, Cr Accounts Receivable (gross) — clears the AR from above |
+| Invoice marked posted (`POST /finance/invoices/{id}/post`) | Dr Operating Expense, Cr Accounts Payable |
+| PO marked received | Dr Inventory, Cr Accounts Payable |
+
+**Behavior change worth knowing:** `verify-payment`, `inventory/movements`,
+`settlements/import`, `invoices/{id}/post`, and `purchase-orders/{id}/receive`
+now require a logged-in admin user (`require_role` is actually enforced on
+these, where before it existed but nothing used it). Log in via `POST
+/auth/login` first, or `admin.html`'s login form — anonymous calls to these
+specific endpoints will now 401.
+
+An `AuditLog` table also records who did what on every one of those actions
+(`actor`, `action`, `entity`, `entity_id`, `detail`, timestamp) — nothing in
+the app code edits or deletes these rows.
+
+**Known simplification, not a bug:** cash-vs-AR treatment is decided purely
+by `order.channel` (LINE/manual = cash now, Shopee/Lazada = AR until
+settled). Real accrual accounting would also handle partial settlements,
+refunds, and multi-currency — none of which exist here.
+
+## Still not full ERP — what's genuinely still missing
+
+Even with the ledger and procurement added, a few things keep this from
+being complete, in roughly the order they'd matter to a real business:
+
+- **Multi-warehouse inventory** — one stock number per product; no per-location tracking or inter-location transfers
+- **Customer-facing AR** — no invoices issued *to* customers, no aging report; the ledger tracks what customers owe conceptually but there's no document trail
+- **Payroll / mechanic commissions** — workshop jobs track who did the work, not what they're paid for it
+- **Budgeting / forecasting** beyond the simple reorder-threshold flag
+- **Bank reconciliation** — settlement reconciliation covers marketplaces, not matching the Cash account against an actual bank statement
+- **Approval workflows / spending limits** — a PO can be created and received by the same role with no approval gate
+- **Multi-tenancy** — this serves one shop; becomes a sellable product once `shop_id` is added everywhere (see the architecture discussion in-repo if you added one)
+- **Document generation** — no PDF quotations, packing slips, or tax invoices yet, despite being a named Phase 2 goal
+
+None of these are architecturally hard given what's here now — the hard
+part (a real ledger that balances) is done — but they're real work, not a
+checkbox.
 
 ## Demo pages
 

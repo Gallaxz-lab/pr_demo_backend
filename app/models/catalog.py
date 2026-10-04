@@ -10,6 +10,7 @@ class Product(Base):
     name = Column(String, nullable=False)
     category = Column(String)
     price = Column(Float, nullable=False, default=0)
+    cost_price = Column(Float, default=0)  # enables real COGS / inventory valuation in the ledger
     description = Column(Text, default="")
 
     compatibility = relationship("Compatibility", back_populates="product", cascade="all, delete-orphan")
