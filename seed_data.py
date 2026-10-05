@@ -1,11 +1,15 @@
-"""Run: python seed_data.py — populates demo catalog, supplier, and chart of
-accounts (the last one also happens automatically on app startup)."""
+"""Run: python seed_data.py — populates demo catalog, supplier, default
+warehouse, and chart of accounts (the last two also happen automatically
+on app startup, this is just for a fresh standalone run)."""
 from app.database import SessionLocal, Base, engine
 from app import models
 from app.services.ledger_service import seed_chart_of_accounts
+from app.services.warehouse_service import get_default_warehouse
 
 Base.metadata.create_all(bind=engine)
 db = SessionLocal()
+
+default_wh = get_default_warehouse(db)
 
 # (sku, name, category, price, cost_price, compatibility, stock)
 catalog = [
@@ -31,11 +35,11 @@ for sku, name, cat, price, cost, compat, stock in catalog:
     db.flush()
     for make, model, yf, yt in compat:
         db.add(models.Compatibility(product_id=p.id, bike_make=make, bike_model=model, year_from=yf, year_to=yt))
-    db.add(models.StockLevel(product_id=p.id, quantity=stock, reorder_threshold=3))
+    db.add(models.StockLevel(product_id=p.id, warehouse_id=default_wh.id, quantity=stock, reorder_threshold=3))
 
 if not db.query(models.Supplier).filter_by(name="Bangkok Moto Parts Co.").first():
     db.add(models.Supplier(name="Bangkok Moto Parts Co.", contact="คุณสมศักดิ์", phone="02-123-4567"))
 
 db.commit()
 seed_chart_of_accounts(db)
-print(f"Seeded {len(catalog)} catalog items, 1 supplier, and the chart of accounts.")
+print(f"Seeded {len(catalog)} catalog items into '{default_wh.name}', 1 supplier, and the chart of accounts.")

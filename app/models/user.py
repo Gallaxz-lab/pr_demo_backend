@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from app.database import Base
 
 
@@ -9,3 +9,4 @@ class AdminUser(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="staff")  # owner, admin, mechanic, staff
     is_active = Column(Boolean, default=True)
+    shop_id = Column(Integer, ForeignKey("shops.id"), nullable=True)  # multi-tenancy FOUNDATION ONLY — not enforced, see models/tenancy.py

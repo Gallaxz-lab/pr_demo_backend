@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 
@@ -182,3 +182,181 @@ class PurchaseOrderOut(BaseModel):
     status: str
     created_at: datetime
     items: List[POItemOut] = []
+
+
+# ---------- Foundation: multi-warehouse ----------
+class WarehouseCreate(BaseModel):
+    name: str
+    address: str = ""
+    is_default: bool = False
+
+
+class StockTransferCreate(BaseModel):
+    product_id: int
+    from_warehouse_id: int
+    to_warehouse_id: int
+    quantity: int
+
+
+class StockTransferOut(BaseModel):
+    product_id: int
+    from_warehouse_id: int
+    to_warehouse_id: int
+    quantity: int
+    source_remaining: int
+    dest_total: int
+
+
+# ---------- Foundation: receivables / AR ----------
+class CustomerInvoiceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    invoice_number: str
+    order_id: Optional[int]
+    customer_id: int
+    subtotal: float
+    vat_amount: float
+    total_amount: float
+    status: str
+    issue_date: datetime
+    due_date: Optional[datetime]
+
+
+# ---------- Foundation: payroll (demo estimator only) ----------
+class EmployeeCreate(BaseModel):
+    name: str
+    role: str = "mechanic"
+    monthly_salary: float = 0
+
+
+class EmployeeOut(EmployeeCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class PayslipOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    employee_id: int
+    period: str
+    gross_pay: float
+    ssf_deduction: float
+    withholding_tax: float
+    net_pay: float
+    created_at: datetime
+
+
+# ---------- Foundation: bank reconciliation ----------
+class BankStatementLineCreate(BaseModel):
+    statement_date: datetime
+    description: str
+    amount: float
+
+
+class BankStatementLineOut(BankStatementLineCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    matched_journal_entry_id: Optional[int]
+    imported_at: datetime
+
+
+# ---------- Foundation: approvals ----------
+class ApprovalOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    entity_type: str
+    entity_id: int
+    amount: float
+    status: str
+    requested_by: str
+    approved_by: Optional[str]
+    created_at: datetime
+
+
+# ---------- Foundation: multi-tenancy ----------
+class ShopCreate(BaseModel):
+    name: str
+    slug: str
+
+
+class ShopOut(ShopCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+
+
+# ---------- Foundations: multi-warehouse ----------
+class WarehouseCreate(BaseModel):
+    name: str
+    address: str = ""
+
+
+class StockTransfer(BaseModel):
+    product_id: int
+    from_warehouse_id: int
+    to_warehouse_id: int
+    quantity: int
+
+
+# ---------- Foundations: customer invoicing / AR aging ----------
+class CustomerInvoiceCreate(BaseModel):
+    customer_id: int
+    order_id: Optional[int] = None
+    due_in_days: int = 30
+    subtotal: float
+    vat_amount: float = 0
+
+
+class CustomerInvoiceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    invoice_number: str
+    customer_id: int
+    order_id: Optional[int]
+    issue_date: datetime
+    due_date: Optional[datetime]
+    subtotal: float
+    vat_amount: float
+    total: float
+    status: str
+    is_tax_invoice: bool
+
+
+# ---------- Foundations: payroll (estimate only) ----------
+class EmployeeCreate(BaseModel):
+    name: str
+    role: str = "staff"
+    base_salary: float
+    start_date: Optional[date] = None
+
+
+class EmployeeOut(EmployeeCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class PayrollRunCreate(BaseModel):
+    period_start: date
+    period_end: date
+
+
+class PayrollRunOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    period_start: date
+    period_end: date
+    created_at: datetime
+
+
+# ---------- Foundations: bank reconciliation ----------
+class BankStatementLineCreate(BaseModel):
+    bank_name: str = ""
+    statement_date: datetime
+    description: str = ""
+    amount: float
+
+
+# ---------- Foundations: multi-tenancy ----------
+class ShopCreate(BaseModel):
+    name: str
+    slug: str

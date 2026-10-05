@@ -88,23 +88,33 @@ by `order.channel` (LINE/manual = cash now, Shopee/Lazada = AR until
 settled). Real accrual accounting would also handle partial settlements,
 refunds, and multi-currency — none of which exist here.
 
+## Foundation layer — scaffolded, needs confirmation before real use
+
+Each of these has real data models and real endpoints — this is not a UI
+mockup, the code runs — but each has a specific, named gap that needs
+something from the real world (a document, a policy decision, or
+professional review) before it should touch real data.
+
+| Module | What's built | What's needed to make it complete |
+|---|---|---|
+| **Multi-warehouse** (`/warehouses`) | `Warehouse` model, stock-per-location, a working transfer endpoint. One "Main Warehouse" is seeded; everything else (orders, PO receiving, plain stock movements) still implicitly uses it. | Nothing blocking — just confirm whether the shop actually has >1 physical location before wiring warehouse choice into the rest of the flows. |
+| **Customer invoicing / AR aging** (`/receivables`) | `CustomerInvoice` model, invoice issuance from an order, an aging report (current/1-30/31-60/61-90/90+ days overdue). | **VAT-registration status** of the shop (invoice numbering rules only matter if registered). **A real invoice sample** (even handwritten) or the shop's accountant's format spec — current numbering (`INV-<BE year>-<seq>`) and flat 7% VAT are both placeholders, not verified against Revenue Department sequential-numbering rules. |
+| **Payroll** (`/payroll`) — **demo estimator only** | `Employee`/`Payslip` models, SSF deduction at a placeholder rate/cap, net pay calculation. | **Do not use for real payroll.** Withholding tax (PND.1) is left at 0 on purpose rather than faked — it's progressive brackets, not a flat rate. SSF rate/cap need verifying against current official numbers. Recommend routing real payroll through an existing Thai provider (FlowAccount, PayrollHero) instead of extending this, or having an accountant review before ever using it for a real paycheck. |
+| **Bank reconciliation** (`/banking`) | `BankStatementLine` model, a naive amount-matching endpoint, same pattern as marketplace settlement matching. | **A sample export (CSV/Excel) from the shop's actual bank** — Kbank, SCB, Bangkok Bank etc. all format differently, and some only offer PDF, which is harder to parse. Nothing can be built against a real format without seeing one. |
+| **Approval workflows** (`/approvals`) | `Approval` model, wired into purchase orders: a PO at/above ฿10,000 blocks `receive` until an owner approves it. | **The threshold (฿10,000) is a placeholder guess** — needs the owner to actually set a real number, and confirm whether owner-only approval is correct or if there should be a manager tier. |
+| **Multi-tenancy** (`/shops`) | `Shop` model + `AdminUser.shop_id` — the seed of the pattern. | **Not a technical gap — a business decision.** Real multi-tenancy means repeating `shop_id` scoping across every table and every query, which is mechanical but substantial. Deliberately not done until it's confirmed this is becoming a sellable product, not a bespoke build for one shop. |
+
 ## Still not full ERP — what's genuinely still missing
 
-Even with the ledger and procurement added, a few things keep this from
-being complete, in roughly the order they'd matter to a real business:
+All six items above now have a foundation. What's left, even after that:
 
-- **Multi-warehouse inventory** — one stock number per product; no per-location tracking or inter-location transfers
-- **Customer-facing AR** — no invoices issued *to* customers, no aging report; the ledger tracks what customers owe conceptually but there's no document trail
-- **Payroll / mechanic commissions** — workshop jobs track who did the work, not what they're paid for it
+- **None of the foundation modules are wired into the rest of the system end-to-end** — e.g. orders don't automatically issue a customer invoice, POs don't automatically check which warehouse to receive into, payroll doesn't pull hours from workshop jobs. Each works standalone via its own endpoints, not yet as part of the existing flows.
 - **Budgeting / forecasting** beyond the simple reorder-threshold flag
-- **Bank reconciliation** — settlement reconciliation covers marketplaces, not matching the Cash account against an actual bank statement
-- **Approval workflows / spending limits** — a PO can be created and received by the same role with no approval gate
-- **Multi-tenancy** — this serves one shop; becomes a sellable product once `shop_id` is added everywhere (see the architecture discussion in-repo if you added one)
-- **Document generation** — no PDF quotations, packing slips, or tax invoices yet, despite being a named Phase 2 goal
+- **Document generation** — no PDF for invoices, quotations, or packing slips yet, despite being a named Phase 2 goal
+- **Full multi-tenancy** — the `Shop` table exists but nothing is actually scoped by it yet (see table above)
 
-None of these are architecturally hard given what's here now — the hard
-part (a real ledger that balances) is done — but they're real work, not a
-checkbox.
+The pattern going forward for all of these: each needs a specific real
+input named in the table above, not more guessing.
 
 ## Demo pages
 

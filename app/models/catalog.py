@@ -14,7 +14,7 @@ class Product(Base):
     description = Column(Text, default="")
 
     compatibility = relationship("Compatibility", back_populates="product", cascade="all, delete-orphan")
-    stock_level = relationship("StockLevel", back_populates="product", uselist=False, cascade="all, delete-orphan")
+    stock_levels = relationship("StockLevel", back_populates="product", cascade="all, delete-orphan")  # list — one row per warehouse
 
 
 class Compatibility(Base):
