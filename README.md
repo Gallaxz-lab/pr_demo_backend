@@ -1,9 +1,14 @@
-# PR.Racing Shop — Business Backend
+# Motorcyle's part shop ERP prototype — Business Backend
 
 FastAPI + SQLAlchemy backend for a vertical ERP serving a performance
 motorcycle garage. One shared database (products, compatibility, stock,
 customers, orders) underneath every module, so nothing drifts out of sync
 between channels.
+
+<img width="1611" height="535" alt="Screenshot 2026-10-27 120427" src="https://github.com/user-attachments/assets/f02defd7-6bcc-43d0-a114-791e7595b8a9" />
+
+<img width="1827" height="894" alt="Screenshot 2026-10-27 120446" src="https://github.com/user-attachments/assets/60d6b427-b54f-489a-b942-b045e46b1589" />
+
 
 ## What's real vs. stubbed
 
